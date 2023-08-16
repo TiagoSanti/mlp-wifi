@@ -1,8 +1,9 @@
 import pywifi
 import pandas as pd
 import os
+import time
 
-def scan_wifi(df: pd.DataFrame) -> pd.DataFrame:
+def manual_scan(df: pd.DataFrame) -> pd.DataFrame:
     wifi = pywifi.PyWiFi()
     iface = wifi.interfaces()[0]
 
@@ -15,41 +16,79 @@ def scan_wifi(df: pd.DataFrame) -> pd.DataFrame:
     for i in results:
         scan_dict[i.ssid] = i.signal
 
-    print('Existing classes:')
-    i = 0
-    for y in df['class'].unique():
-        print(f'{i}: {y}')
-    target = input('Insert the class (number) or add new: ')
-    if target.isdigit():
-        target = df['class'].unique()[int(target)]
-    else:
-        print(f'Adding new class {target} to the list of classes')
-
+    try:
+        print('Existing classes:')
+        i = 0
+        for y in df['class'].unique():
+            print(f'{i}: {y}')
+            i += 1
+        target = input('Insert the class (number) or add new: ')
+        if target.isdigit():
+            target = df['class'].unique()[int(target)]
+        else:
+            print(f'Adding new class {target} to the list of classes')
+    except KeyError:
+        print('No classes found, adding new class')
+        target = input('Insert the class: ')
+    
     scan_dict['class'] = target
 
     data.append(scan_dict)
 
     return pd.DataFrame(data)
 
+def automatic_scan(df: pd.DataFrame) -> pd.DataFrame:
+    wifi = pywifi.PyWiFi()
+    iface = wifi.interfaces()[0]
+
+    data = []
+
+    target = input('Insert the class: ')
+
+    try:
+        while True:
+            print('Scanning...', end=' ')
+            iface.scan()
+            results = iface.scan_results()
+            print(f'Found {len(results)} networks')
+
+            scan_dict = {}
+            for i in results:
+                scan_dict[i.ssid] = i.signal
+
+            scan_dict['class'] = target
+
+            data.append(scan_dict)
+            
+            print(f'Sleeping for 3 seconds...\n')
+            time.sleep(3)
+
+    except KeyboardInterrupt:
+        print('Scan interrupted')
+    
+    return pd.DataFrame(data)
+
 if __name__ == "__main__":
-    input_file = input('Insert the input file:')
+    input_file = input('Insert the input file: ')
     if os.path.isfile(input_file):
         print(f'File {input_file} exists')
         df = pd.read_csv(input_file)
-        print(df)
     else:
         print(f'File {input_file} does not exist')
         df = pd.DataFrame()
 
+    scan_type = input('\nManual scan or automatic scan? (m/a): ')
     print('\nStarting scan...')
-    while True:
-        scan = input('\nScan? (y/n): ')
-        if scan == 'n':
-            break
-        else:
-            df = df.append(scan_wifi(df))
-    print(df)
+    if scan_type == 'm':
+        while True:
+            scan = input('\nScan? (y/n): ')
+            if scan == 'n':
+                break
+            else:
+                df = df.append(manual_scan(df))
+    elif scan_type == 'a':
+        df = df.append(automatic_scan(df))
 
-    output_file = input('\nInsert the output file name:')
-    df.reset_index(drop=True, inplace=True)
+    output_file = input('\nInsert the output file name: ')
+    df.fillna(-100, inplace=True)
     df.to_csv(output_file, index=False)
