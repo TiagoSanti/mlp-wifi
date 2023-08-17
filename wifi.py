@@ -37,7 +37,7 @@ def manual_scan(df: pd.DataFrame) -> pd.DataFrame:
 
     return pd.DataFrame(data)
 
-def automatic_scan(df: pd.DataFrame, interval: int = 1) -> pd.DataFrame:
+def automatic_scan(df: pd.DataFrame, interval: float = 1) -> pd.DataFrame:
     wifi = pywifi.PyWiFi()
     iface = wifi.interfaces()[0]
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         df = pd.DataFrame()
 
     scan_type = input('\nManual scan or automatic scan? (m/a): ')
-    interval = int(input('Insert the interval between scans (in seconds): '))
+    interval = float(input('Insert the interval between scans (in seconds): '))
     print('\nStarting scan...')
     if scan_type == 'm':
         while True:
