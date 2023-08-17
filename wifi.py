@@ -92,5 +92,11 @@ if __name__ == "__main__":
         df = df.append(automatic_scan(df, interval))
 
     output_file = input('\nInsert the output file name: ')
+
     df.fillna(-100, inplace=True)
+    columns = list(df.columns)
+    columns.remove('class')
+    columns.insert(0, 'class')
+    df = df[columns]
+
     df.to_csv(f'data/{output_file}', index=False)
