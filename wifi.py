@@ -37,7 +37,7 @@ def manual_scan(df: pd.DataFrame) -> pd.DataFrame:
 
     return pd.DataFrame(data)
 
-def automatic_scan(df: pd.DataFrame) -> pd.DataFrame:
+def automatic_scan(df: pd.DataFrame, interval: int = 1) -> pd.DataFrame:
     wifi = pywifi.PyWiFi()
     iface = wifi.interfaces()[0]
 
@@ -60,8 +60,8 @@ def automatic_scan(df: pd.DataFrame) -> pd.DataFrame:
 
             data.append(scan_dict)
             
-            print(f'Sleeping for 3 seconds...\n')
-            time.sleep(3)
+            print(f'Sleeping for {interval} seconds...\n')
+            time.sleep(interval)
 
     except KeyboardInterrupt:
         print('Scan interrupted')
@@ -70,6 +70,7 @@ def automatic_scan(df: pd.DataFrame) -> pd.DataFrame:
 
 if __name__ == "__main__":
     input_file = input('Insert the input file: ')
+    input_file = f'data/{input_file}'
     if os.path.isfile(input_file):
         print(f'File {input_file} exists')
         df = pd.read_csv(input_file)
@@ -78,6 +79,7 @@ if __name__ == "__main__":
         df = pd.DataFrame()
 
     scan_type = input('\nManual scan or automatic scan? (m/a): ')
+    interval = int(input('Insert the interval between scans (in seconds): '))
     print('\nStarting scan...')
     if scan_type == 'm':
         while True:
@@ -87,8 +89,8 @@ if __name__ == "__main__":
             else:
                 df = df.append(manual_scan(df))
     elif scan_type == 'a':
-        df = df.append(automatic_scan(df))
+        df = df.append(automatic_scan(df, interval))
 
     output_file = input('\nInsert the output file name: ')
     df.fillna(-100, inplace=True)
-    df.to_csv(output_file, index=False)
+    df.to_csv(f'data/{output_file}', index=False)
